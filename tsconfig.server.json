@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "server-dist"
+  },
+  "include": ["src/server.ts", "src/articles.ts", "src/life-events.ts", "src/topics.ts"]
+}
