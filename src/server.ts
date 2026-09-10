@@ -10,11 +10,13 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { workflowIds, workflows } from "./workflows.js";
 import { articles } from "./articles.js";
-import { topics, lifeEventTopics, inferTopic } from "./topics.js";
+import { topics, inferTopic } from "./topics.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WIDGET_URI = "ui://fidelity-learning/article-cards.html";
-const SOURCE_URL = "https://www.fidelity.com/learning-center/overview";
+// Keep source text model-visible; decoration and form hydration are widget-only.
+const compactArticles = (items: typeof articles) => items.map(({ title, summary, url }) => ({ title, summary, url }));
+const presentation = (items: typeof articles) => items.map(({ category }) => category);
 
 function createServer() {
   const server = new McpServer({ name: "fidelity-learning-cards", version: "0.1.0" }, {
@@ -39,9 +41,11 @@ function createServer() {
       if (resolvedTopic === "retirement") return article.category === "Retirement" || article.topic === "retiring";
       return article.topic === resolvedTopic || article.category.toLowerCase() === resolvedTopic;
     });
+    const displayed = selected.slice(0, 6);
     return {
-      content: [{ type: "text" as const, text: JSON.stringify({ source: "Curated Fidelity Learning Center catalog (not live retrieval)", resolvedTopic, coverage: selected.length ? "available" : "no-match", articles: selected, featuredArticles: selected.slice(0, 2), additionalResources: selected.slice(2, 6) }) }],
-      structuredContent: { resolvedTopic, availableTopics: lifeEventTopics, coverage: selected.length ? "available" : "no-match", articles: selected, featuredArticles: selected.slice(0, 2), additionalResources: selected.slice(2, 6), sourceUrl: SOURCE_URL, updatedAt: new Date().toISOString() }
+      content: [{ type: "text" as const, text: displayed.length ? "Fidelity resources ready. Introduce briefly; do not repeat the widget’s cards or links." : "No matching Fidelity resources in the curated catalog." }],
+      structuredContent: { resolvedTopic: resolvedTopic ?? null, coverage: displayed.length ? "available" : "no-match", articles: compactArticles(displayed) },
+      _meta: { keeper: { categories: presentation(displayed) } }
     };
   });
 
@@ -58,10 +62,11 @@ function createServer() {
   }, async ({ workflow, monthlyBudget, children }) => {
     const definition = workflows[workflow];
     const relevant = articles.filter(a => workflow === "savings-priorities" ? a.url.endsWith("/savings-plan") : workflow === "start-investing" ? /\/(how-to-start-investing|investing-tips)$/.test(a.url) : a.topic === definition.topic);
-    const data = { mode: "planning", workflow, title: definition.title, steps: definition.steps, inputs: { monthlyBudget, children }, articles: relevant.slice(0, 2), sourceUrl: SOURCE_URL,
+    const displayed = relevant.slice(0, 2);
+    const data = { mode: "planning", workflow, steps: definition.steps, articles: compactArticles(displayed),
       calculationNote: "Keeper contribution-only estimates. No growth, inflation, fees, taxes, or tuition forecast. UI edits and checklist progress remain in this view and are not saved or sent back to the conversation.",
       handoff: "Links open Fidelity education pages. Keeper does not open accounts or move money." };
-    return { content: [{ type: "text" as const, text: JSON.stringify(data) }], structuredContent: data };
+    return { content: [{ type: "text" as const, text: "Keeper planning view ready. Introduce briefly; do not repeat the widget." }], structuredContent: data, _meta: { keeper: { categories: presentation(displayed), inputs: { monthlyBudget, children } } } };
   });
 
   registerAppResource(server, "Fidelity learning article cards", WIDGET_URI, {

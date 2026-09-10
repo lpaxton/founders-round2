@@ -46,7 +46,9 @@ function Widget() {
   const [revision,setRevision] = useState(0);
   const [linkError,setLinkError] = useState('');
   const {app,error} = useApp({appInfo:{name:'Keeper',version:'0.2.0'},capabilities:{},onAppCreated:(created:MccpApp)=>{
-    created.ontoolresult=result=>{setData(result.structuredContent as ToolData);setRevision(r=>r+1);setLinkError('');};
+    created.ontoolresult=result=>{const raw = result.structuredContent as ToolData;
+      const display = result._meta?.keeper as {categories?: Article['category'][]; inputs?: ToolData['inputs']} | undefined;
+      setData({...raw, inputs: display?.inputs ?? raw.inputs, articles: raw.articles.map((a,i)=>({...a,id:a.url,category:display?.categories?.[i] ?? a.category}))});setRevision(r=>r+1);setLinkError('');};
   }});
   if(error) return <div className="status error">Keeper could not load. Ask for linked resources instead.</div>;
   if(!app||!data) return <div className="status">Loading Keeper…</div>;

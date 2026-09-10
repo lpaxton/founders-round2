@@ -59,7 +59,7 @@ All 14 categories in Fidelity's [life-events directory](https://www.fidelity.com
 
 Use `query` for a natural-language question, such as `{"query":"How do I start saving for my kids college?"}`. The server infers a category and returns its curated order. Set an explicit topic to override inference. The schema lists topic IDs, and results include `availableTopics`, `resolvedTopic`, and `coverage`. Unrecognized queries return `no-match` and empty resources rather than unrelated content. Broad queries without a query string can list the catalog.
 
-Tool responses include `featuredArticles` (up to two), `additionalResources` (up to four distinct links), and the complete matching `articles` list. Resources are selected within the matching category, not a full semantic search. Coverage of all categories does not guarantee coverage of every subtopic. Summaries are concise descriptions, not full article text or live guidance. US-specific accounts, taxes, legal rules, and benefits may not apply elsewhere.
+Tool responses contain one `articles` array capped at six for discovery and two for planning. The widget renders the first two as cards and the rest as supporting links. No complete catalog or duplicated article lists are sent. Resources are selected within the matching category, not a full semantic search. Coverage of all categories does not guarantee coverage of every subtopic. Summaries are concise descriptions, not full article text or live guidance. US-specific accounts, taxes, legal rules, and benefits may not apply elsewhere.
 
 Content is stored in `src/articles.ts` and `src/life-events.ts`; routing is in `src/topics.ts`. Adding content requires source verification and a build. There is no runtime web search or crawler.
 
@@ -86,3 +86,5 @@ All 14 life-event categories retain discovery coverage; only these three pilots 
 Hosting the server and connecting it to an MCP Apps-capable chat host are still required for native in-chat rendering. Adding this source or skill to a repository alone does not install the app in ChatGPT.
 
 Browser interaction check: `node scripts/check-ui.mjs [absolute-path-to-playwright/index.mjs]`. Playwright and a browser must be installed separately. Set `KEEPER_BROWSER_CHANNEL=chrome` to use installed Chrome. This uses a test host stub; production native-host integration still requires validation after connection.
+
+Model-visible results contain source titles, concise summaries, and URLs once, plus a short status message. Widget-only category styling and initial form values travel in result `_meta.keeper`. Planning steps and calculation limitations remain model-visible for text fallback and grounded follow-ups. This reduces payload size; exact token savings depend on the host/model.

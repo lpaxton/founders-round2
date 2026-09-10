@@ -50,11 +50,14 @@ test('MCP returns two cards and four distinct supporting links', async () => {
    assert.ok(!r.isError);
    const d = r.structuredContent as any;
    assert.equal(d.resolvedTopic,topic);
-   assert.equal(d.featuredArticles.length,2);
-   if(topic !== 'investing') assert.equal(d.additionalResources.length,4);
-   const shown=[...d.featuredArticles,...d.additionalResources];
+   assert.ok(d.articles.length <= 6);
+   assert.equal(d.featuredArticles,undefined);
+   assert.equal(d.additionalResources,undefined);
+   if(topic !== 'investing') assert.equal(d.articles.length,6);
+   const shown=d.articles;
    assert.equal(new Set(shown.map(a=>a.url)).size,shown.length);
-   if(topic !== 'investing') assert.ok(shown.every(a=>a.topic === topic));
+   if(topic !== 'investing') assert.ok(shown.every(a=>articles.find(original=>original.url===a.url)?.topic === topic));
+   assert.ok(!JSON.stringify(r.content).includes(shown[0].url));
   }
   const empty = await c.callTool({name:'show_fidelity_articles',arguments:{query:'What is the weather tomorrow?'}});
   assert.equal((empty.structuredContent as any).coverage,'no-match');

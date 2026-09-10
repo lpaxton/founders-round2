@@ -12,11 +12,24 @@ try {
   const result = await client.callTool({ name: 'show_fidelity_articles', arguments: { query: 'How do I save for my kids college?' } });
   assert.ok(!result.isError);
   assert.equal(result.structuredContent.resolvedTopic, 'college');
-  assert.equal(result.structuredContent.featuredArticles.length, 2);
-  assert.equal(result.structuredContent.additionalResources.length, 4);
+  assert.equal(result.structuredContent.articles.length, 6);
+  assert.equal(result.structuredContent.featuredArticles, undefined);
+  const tools = (await client.listTools()).tools;
+  for (const name of ['show_fidelity_articles', 'plan_keeper_next_steps']) {
+    assert.equal(tools.find(t => t.name === name)?._meta?.ui?.resourceUri, 'ui://fidelity-learning/article-cards.html');
+  }
+  for (const workflow of ['start-investing', 'savings-priorities', 'college-savings']) {
+    const plan = await client.callTool({name: 'plan_keeper_next_steps', arguments: {workflow, monthlyBudget:400}});
+    assert.ok(!plan.isError);
+    assert.equal(plan.structuredContent.workflow, workflow);
+    assert.equal(plan._meta.keeper.inputs.monthlyBudget, 400);
+    assert.equal(plan.structuredContent.inputs, undefined);
+  }
+  const broad = await client.callTool({name:'show_fidelity_articles',arguments:{topic:'all'}});
+  assert.equal(broad.structuredContent.articles.length, 6);
   const resource = await client.readResource({ uri: 'ui://fidelity-learning/article-cards.html' });
   assert.ok(resource.contents[0].text.includes('<script'));
-  console.log('PASS: health, MCP initialization, college resources, and bundled cards');
+  console.log('PASS: fresh HTTP connection, both UI tool descriptors, all three planners, capped discovery, widget metadata, bundled UI');
 } finally {
   await client.close();
 }

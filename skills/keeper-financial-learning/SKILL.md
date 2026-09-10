@@ -11,7 +11,7 @@ Keeper is the user experience. Fidelity Investments is the content source. This 
 
 Call the connected Keeper/Fidelity MCP tool `show_fidelity_articles` with the user's question in `query`. Tool names may carry a host-specific prefix. Use conversation context to make short follow-ups self-contained, but do not send account identifiers, detailed holdings, or uploaded household files to the public content server.
 
-The result includes `resolvedTopic`, `coverage`, `articles`, `featuredArticles`, and `additionalResources`. The catalog contains curated descriptions and URLs, not full articles, current account rules, market prices, or personalized recommendations.
+The result includes `resolvedTopic`, `coverage`, a single capped `articles` list (first two cards; remainder supporting links). The catalog contains curated descriptions and URLs, not full articles, current account rules, market prices, or personalized recommendations.
 
 For an incorrect or missing inferred topic, choose an explicit supported topic only when it fits: `investing`, `retirement`, `changing-jobs`, `college`, `divorce`, `parenting`, `caregiving`, `marriage`, `home-buying`, `retiring`, `bereavement`, `major-purchase`, `illness-injury`, `disabilities`, `aging`, or `self-employment`. Use `life-events` or `all` only for broad discovery. For example, college savings and 529 questions map to `college`; saving for a house maps to `home-buying`.
 

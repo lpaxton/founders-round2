@@ -31,10 +31,10 @@ test('planning tool returns native UI metadata for all pilots and validates inpu
    assert.ok(d.steps.length); assert.ok(d.articles.length>0&&d.articles.length<=2);
    if(workflow === "savings-priorities") assert.ok(d.articles.every((a:any)=>a.url.endsWith("/savings-plan")));
    assert.equal(d.additionalResources,undefined);
-   assert.equal(d.inputs.monthlyBudget,undefined);
+   assert.equal(d.inputs,undefined);
   }
   const result=await c.callTool({name:'plan_keeper_next_steps',arguments:{workflow:'college-savings',monthlyBudget:400,children:[{age:8,saved:1000},{age:15,saved:500}]}});
-  assert.deepEqual((result.structuredContent as any).inputs,{monthlyBudget:400,children:[{age:8,saved:1000},{age:15,saved:500}]});
+  assert.deepEqual((result._meta as any).keeper.inputs,{monthlyBudget:400,children:[{age:8,saved:1000},{age:15,saved:500}]});
   const invalid=await c.callTool({name:'plan_keeper_next_steps',arguments:{workflow:'college-savings',monthlyBudget:-1}});
   assert.ok(invalid.isError);
  } finally {await c.close();}
