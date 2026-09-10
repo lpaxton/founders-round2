@@ -1,5 +1,13 @@
 # Fidelity Learning Cards MCP app
 
+Keeper is the user experience built around this educational MCP server.
+
+## Keeper skill
+
+The reusable workflow lives in [skills/keeper-financial-learning/SKILL.md](skills/keeper-financial-learning/SKILL.md). It directs the host to retrieve Fidelity resources, use the two-card/four-link format, and handle follow-up planning without overstating the catalog's coverage. The skill is included in the source package and Docker image.
+
+The chat host must install/load this skill alongside the MCP connection, for example through a plugin that bundles both. Merely running the container does not install a skill in ChatGPT. The public endpoint and an installable plugin connection still need to be configured; this repository does not yet contain a registered ChatGPT plugin.
+
 A small MCP server that renders selected Fidelity Learning Center articles as interactive cards in OpenAI chat hosts that support MCP Apps.
 
 This is an independent demonstration and is not affiliated with or endorsed by Fidelity. Article titles, descriptions, and outbound links come from Fidelity.com. No article images or Fidelity branding assets are copied.
