@@ -68,3 +68,21 @@ Run `npm run build` and `node --import tsx --test tests/life-events.test.ts` to 
 ## External hosting
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for Docker, native Node hosting, HTTPS proxy configuration, and deployment verification. Production uses compiled JavaScript and does not need TypeScript tooling at runtime.
+
+## Adaptive Keeper UI
+
+`show_fidelity_articles` is discovery: up to two cards and up to four distinct links in an expandable resources section. Counts are caps, not quotas. Explanations do not require repeating the widget.
+
+`plan_keeper_next_steps` opens a native MCP Apps planning view:
+
+- `start-investing`: preparation checklist.
+- `savings-priorities`: editable monthly budget and three user-selected allocations, with a remaining/over-budget check.
+- `college-savings`: editable children, ages, savings, starting ages, and monthly contributions. Estimates use existing savings + contributions × months; no return, tuition, tax, fee, or inflation assumptions.
+
+Optional tool inputs: `monthlyBudget` (one total budget) and `children` (`age`, optional `saved`). Missing inputs are editable in the UI. Default example ages and zero savings are placeholders, not known household facts. Calculations and checklists are Keeper tools; Fidelity article attribution applies only to resources. Inputs and progress stay in the current widget and are not persisted or sent to the model. Reloading/replacing the tool result resets them.
+
+All 14 life-event categories retain discovery coverage; only these three pilots support interactive planning. Links open Fidelity educational pages, not completed account actions. This version does not verify current account terms or provide account-specific recommendations.
+
+Hosting the server and connecting it to an MCP Apps-capable chat host are still required for native in-chat rendering. Adding this source or skill to a repository alone does not install the app in ChatGPT.
+
+Browser interaction check: `node scripts/check-ui.mjs [absolute-path-to-playwright/index.mjs]`. Playwright and a browser must be installed separately. Set `KEEPER_BROWSER_CHANNEL=chrome` to use installed Chrome. This uses a test host stub; production native-host integration still requires validation after connection.

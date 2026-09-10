@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { workflowIds, workflows } from "./workflows.js";
 import { articles } from "./articles.js";
 import { topics, lifeEventTopics, inferTopic } from "./topics.js";
 
@@ -17,7 +18,7 @@ const SOURCE_URL = "https://www.fidelity.com/learning-center/overview";
 
 function createServer() {
   const server = new McpServer({ name: "fidelity-learning-cards", version: "0.1.0" }, {
-    instructions: "Use show_fidelity_articles for investing, retirement, and life-event education, including college, parenting, marriage, divorce, caregiving, aging, illness, disability, bereavement, jobs, self-employment, major purchases, home buying, and retiring. This is a curated Fidelity article catalog, not live search or full article retrieval. Base answers only on returned summaries and cite their URLs. Report missing coverage instead of silently using web search."
+    instructions: "Use plan_keeper_next_steps for actionable start-investing, savings-priorities, and college-savings requests; it displays interactive planning UI. Use show_fidelity_articles for discovery about investing, retirement, and life-event education, including college, parenting, marriage, divorce, caregiving, aging, illness, disability, bereavement, jobs, self-employment, major purchases, home buying, and retiring. This is a curated Fidelity article catalog, not live search or full article retrieval. Base answers only on returned summaries and cite their URLs. Report missing coverage instead of silently using web search."
   });
 
   registerAppTool(server, "show_fidelity_articles", {
@@ -42,6 +43,25 @@ function createServer() {
       content: [{ type: "text" as const, text: JSON.stringify({ source: "Curated Fidelity Learning Center catalog (not live retrieval)", resolvedTopic, coverage: selected.length ? "available" : "no-match", articles: selected, featuredArticles: selected.slice(0, 2), additionalResources: selected.slice(2, 6) }) }],
       structuredContent: { resolvedTopic, availableTopics: lifeEventTopics, coverage: selected.length ? "available" : "no-match", articles: selected, featuredArticles: selected.slice(0, 2), additionalResources: selected.slice(2, 6), sourceUrl: SOURCE_URL, updatedAt: new Date().toISOString() }
     };
+  });
+
+  registerAppTool(server, "plan_keeper_next_steps", {
+    title: "Plan your next steps with Keeper",
+    description: "Display an interactive checklist or editable budget/college contribution calculator in chat. Use for action-oriented follow-ups about starting investing, organizing savings priorities, or college savings. No account access, transactions, return forecasts, or tax recommendations. Optional inputs initialize the view; do not send account identifiers or uploaded files.",
+    inputSchema: {
+      workflow: z.enum(workflowIds),
+      monthlyBudget: z.number().finite().min(0).max(10000000).optional(),
+      children: z.array(z.object({ age: z.number().int().min(0).max(100), saved: z.number().finite().min(0).max(100000000).default(0) })).min(1).max(10).optional()
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    _meta: { ui: { resourceUri: WIDGET_URI } }
+  }, async ({ workflow, monthlyBudget, children }) => {
+    const definition = workflows[workflow];
+    const relevant = articles.filter(a => workflow === "savings-priorities" ? a.url.endsWith("/savings-plan") : workflow === "start-investing" ? /\/(how-to-start-investing|investing-tips)$/.test(a.url) : a.topic === definition.topic);
+    const data = { mode: "planning", workflow, title: definition.title, steps: definition.steps, inputs: { monthlyBudget, children }, articles: relevant.slice(0, 2), sourceUrl: SOURCE_URL,
+      calculationNote: "Keeper contribution-only estimates. No growth, inflation, fees, taxes, or tuition forecast. UI edits and checklist progress remain in this view and are not saved or sent back to the conversation.",
+      handoff: "Links open Fidelity education pages. Keeper does not open accounts or move money." };
+    return { content: [{ type: "text" as const, text: JSON.stringify(data) }], structuredContent: data };
   });
 
   registerAppResource(server, "Fidelity learning article cards", WIDGET_URI, {
